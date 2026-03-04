@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ჩვენი ვარსკვლავების რუკა</title>
+    <title>The Map of Stars | La La Land</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@1,400&family=Fira+Go:wght@300;400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@1,400;1,600&family=Fira+Go:wght@300;400;700&display=swap');
 
         :root { --gold: #f3cc4d; --bg: #05070a; }
 
@@ -16,134 +16,160 @@
             color: white;
             font-family: 'Fira Go', sans-serif;
             margin: 0;
-            height: 100vh;
-            overflow: hidden; /* რომ ეკრანი არ იძვროდეს */
+            overflow-x: hidden;
         }
 
         .cinzel { font-family: 'Cinzel', serif; letter-spacing: 0.3em; color: var(--gold); }
         .serif-italic { font-family: 'Playfair Display', serif; font-style: italic; }
 
-        /* ვარსკვლავური ცის ფონი */
-        .sky {
+        .stars-overlay {
             position: fixed;
             inset: 0;
-            background-image: radial-gradient(circle at center, #111827 0%, #05070a 100%);
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.4;
             z-index: -1;
         }
 
-        /* პატარა მოციმციმე ვარსკვლავები დეკორისთვის */
-        .decor-star {
+        /* ცენტრალური ხაზი */
+        .path-line {
             position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.3;
-            animation: twinkle 2s infinite alternate;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, transparent, var(--gold) 15%, var(--gold) 85%, transparent);
+            transform: translateX(-50%);
+            z-index: 1;
         }
 
-        /* მთავარი მოგონებების ვარსკვლავები */
-        .memory-star {
-            position: absolute;
-            width: 15px;
-            height: 15px;
+        .memory-section {
+            position: relative;
+            height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* მოციმციმე ვარსკვლავი-ღილაკი */
+        .star-trigger {
+            width: 20px;
+            height: 20px;
             background: var(--gold);
             border-radius: 50%;
-            box-shadow: 0 0 15px var(--gold), 0 0 30px var(--gold);
+            box-shadow: 0 0 20px var(--gold), 0 0 40px var(--gold);
             cursor: pointer;
-            z-index: 20;
+            z-index: 10;
+            animation: pulse 2s infinite;
             transition: transform 0.3s;
         }
 
-        .memory-star:hover { transform: scale(1.8); }
+        .star-trigger:hover { transform: scale(1.5); }
 
-        /* მესიჯის ბარათი (Popup) */
-        .message-card {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 350px;
+        /* მესიჯის ბოქსი */
+        .memory-box {
+            position: absolute;
+            width: 85%;
+            max-width: 320px;
             background: rgba(10, 14, 26, 0.95);
             border: 1px solid var(--gold);
-            padding: 30px;
-            text-align: center;
+            padding: 25px;
             backdrop-filter: blur(15px);
-            display: none;
-            z-index: 100;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            text-align: center;
+            display: none; /* თავიდან დამალულია */
+            z-index: 20;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
 
-        @keyframes twinkle {
-            from { opacity: 0.2; }
-            to { opacity: 0.7; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px var(--gold); }
+            50% { box-shadow: 0 0 30px var(--gold), 0 0 50px var(--gold); }
+            100% { box-shadow: 0 0 10px var(--gold); }
         }
 
-        /* ხაზები, რომლებიც აერთებს ვარსკვლავებს */
-        .constellation-line {
-            position: absolute;
-            height: 1px;
-            background: rgba(243, 204, 77, 0.15);
-            transform-origin: left center;
-            z-index: 5;
+        /* განლაგება მობილურზე და დესკტოპზე */
+        @media (min-width: 768px) {
+            .pos-left { left: 15%; }
+            .pos-right { left: 65%; }
         }
     </style>
 </head>
 <body>
 
-    <div class="sky" id="sky"></div>
+    <div class="stars-overlay"></div>
 
-    <header class="absolute top-10 w-full text-center z-50">
-        <h1 class="cinzel text-2xl md:text-4xl animate__animated animate__fadeInDown">Our Map of Stars</h1>
-        <p class="serif-italic text-slate-400 mt-2">დააჭირე ვარსკვლავებს...</p>
+    <header class="h-screen flex flex-col items-center justify-center text-center px-6">
+        <h1 class="cinzel text-3xl md:text-5xl animate__animated animate__fadeIn">The Map of Stars</h1>
+        <div class="w-24 h-px bg-amber-500/30 mx-auto my-6"></div>
+        <p class="serif-italic text-lg md:text-xl text-slate-400 max-w-md animate__animated animate__fadeIn animate__delay-1s">
+            "City of stars, are you shining just for me?"
+        </p>
+        <div class="mt-20 animate__animated animate__fadeIn animate__infinite animate__slower">
+            <span class="text-[10px] uppercase tracking-[0.5em] text-amber-500/50">ჩამოსქროლე და აანთე მოგონებები</span>
+        </div>
     </header>
 
-    <div class="memory-star" style="top: 30%; left: 15%;" onclick="openMsg('Lighthouse Cafe', 'აქ პირველად გნახე პიანინოსთან... მუსიკა ჩვენს ისტორიას ყვებოდა.')"></div>
-    <div class="memory-star" style="top: 25%; left: 75%;" onclick="openMsg('The Observatory', 'ცეკვა ვარსკვლავებს შორის. აქ რეალობა ოცნებად იქცა.')"></div>
-    <div class="memory-star" style="top: 55%; left: 50%;" onclick="openMsg('Colorado Bridge', 'მზის ჩასვლა და შენი ღიმილი. აქ მივხვდი, რომ ჩემი სახლი შენ ხარ.')"></div>
-    <div class="memory-star" style="top: 75%; left: 20%;" onclick="openMsg('Rialto Theatre', 'ჩვენი პირველი ფილმი. დრო გაჩერდა და მხოლოდ ჩვენი გულისცემა ისმოდა.')"></div>
-    <div class="memory-star" style="top: 80%; left: 70%;" onclick="openMsg('Seb\'s Club', 'ჩემი ყველაზე დიდი საჩუქარი შენ ხარ. გილოცავ 8 მარტს! ✨')"></div>
+    <section class="relative">
+        <div class="path-line"></div>
 
-    <div id="msgCard" class="message-card animate__animated">
-        <h3 id="msgTitle" class="cinzel text-sm mb-4"></h3>
-        <p id="msgText" class="serif-italic text-slate-200 text-lg"></p>
-        <button onclick="closeMsg()" class="mt-8 text-[10px] uppercase tracking-widest text-amber-500 underline">დახურვა</button>
-    </div>
+        <div class="memory-section">
+            <div class="star-trigger pos-left" onclick="toggleBox(this)"></div>
+            <div class="memory-box">
+                <span class="cinzel text-[10px] text-amber-500">The Lighthouse Cafe</span>
+                <h3 class="serif-italic text-xl my-2">პირველი ნოტები</h3>
+                <p class="text-sm text-slate-300 italic">"აქ, სადაც ჯაზი სუნთქავს... შენ მასწავლე, რომ ვნებას საზღვრები არ აქვს."</p>
+            </div>
+        </div>
+
+        <div class="memory-section">
+            <div class="star-trigger pos-right" onclick="toggleBox(this)"></div>
+            <div class="memory-box">
+                <span class="cinzel text-[10px] text-amber-500">Griffith Observatory</span>
+                <h3 class="serif-italic text-xl my-2">ცეკვა ვარსკვლავებს შორის</h3>
+                <p class="text-sm text-slate-300 italic">"აქ ჩვენი ისტორია რეალობას გასცდა. პლანეტარიუმის ცაზე ავიჭერით."</p>
+            </div>
+        </div>
+
+        <div class="memory-section">
+            <div class="star-trigger pos-left" onclick="toggleBox(this)"></div>
+            <div class="memory-box">
+                <span class="cinzel text-[10px] text-amber-500">Colorado Street Bridge</span>
+                <h3 class="serif-italic text-xl my-2">ოცნებების ხიდი</h3>
+                <p class="text-sm text-slate-300 italic">"შენ დამინახე მაშინაც, როცა მე საკუთარ თავს ვერ ვხედავდი. მადლობა რწმენისთვის."</p>
+            </div>
+        </div>
+
+        <div class="memory-section">
+            <div class="star-trigger pos-right" onclick="toggleBox(this)"></div>
+            <div class="memory-box">
+                <span class="cinzel text-[10px] text-amber-500">Seb's Club</span>
+                <h3 class="serif-italic text-xl my-2">ჩემი სახლი შენ ხარ</h3>
+                <p class="text-sm text-slate-300 italic">"სადაც არ უნდა ვიყოთ, ეს რუკა ყოველთვის შენთან მომიყვანს. ჩემი სიმშვიდე შენ ხარ."</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="h-screen flex flex-col items-center justify-center text-center px-6">
+        <div class="text-4xl mb-8 animate__animated animate__pulse animate__infinite">🎹</div>
+        <p class="serif-italic text-2xl text-amber-400 mb-4 animate__animated animate__fadeInUp">"Here's to the fools who dream."</p>
+        <p class="text-[10px] uppercase tracking-[0.4em] text-slate-500">გილოცავ 8 მარტს, ჩემო ვარსკვლავო!</p>
+        <div class="w-px h-24 bg-gradient-to-b from-amber-500 to-transparent mt-12"></div>
+    </footer>
 
     <script>
-        // მესიჯის გახსნა
-        function openMsg(title, text) {
-            const card = document.getElementById('msgCard');
-            document.getElementById('msgTitle').innerText = title;
-            document.getElementById('msgText').innerText = text;
-            card.style.display = 'block';
-            card.classList.remove('animate__fadeOut');
-            card.classList.add('animate__fadeIn');
-        }
-
-        // მესიჯის დახურვა
-        function closeMsg() {
-            const card = document.getElementById('msgCard');
-            card.classList.replace('animate__fadeIn', 'animate__fadeOut');
-            setTimeout(() => { card.style.display = 'none'; }, 500);
-        }
-
-        // დეკორატიული ვარსკვლავების გენერაცია
-        function createDecorStars() {
-            const sky = document.getElementById('sky');
-            for(let i=0; i<50; i++) {
-                const star = document.createElement('div');
-                star.className = 'decor-star';
-                const size = Math.random() * 3 + 'px';
-                star.style.width = size;
-                star.style.height = size;
-                star.style.top = Math.random() * 100 + '%';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.animationDelay = Math.random() * 2 + 's';
-                sky.appendChild(star);
+        function toggleBox(star) {
+            // ვპოულობთ შესაბამის ბოქსს, რომელიც ვარსკვლავის გვერდითაა
+            const box = star.nextElementSibling;
+            
+            // თუ უკვე ღიაა - ვხურავთ, თუ არა - ვხსნით
+            if (box.style.display === 'block') {
+                box.classList.replace('animate__fadeInUp', 'animate__fadeOutDown');
+                setTimeout(() => { box.style.display = 'none'; }, 500);
+            } else {
+                box.style.display = 'block';
+                box.classList.remove('animate__fadeOutDown');
+                box.classList.add('animate__animated', 'animate__fadeInUp');
             }
         }
-
-        createDecorStars();
     </script>
 </body>
 </html>

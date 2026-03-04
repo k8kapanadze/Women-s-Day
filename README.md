@@ -1,125 +1,157 @@
-<!DOCTYPE html>
+
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ჩვენი ვარსკვლავების რუკა | La La Land</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>ჩვენი ადგილების რუკა</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Fira+Go:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&family=Fira+Go:wght@300;400;700&display=swap');
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Fira Go', sans-serif; background: #0a0e1a; }
-        h1 { font-family: 'Playfair Display', serif; }
-
-        /* რუკის სტილი - მუქი ფილტრი */
-        #map { 
-            width: 100%; 
-            height: 100vh; 
-            background: #0a0e1a;
-            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-        }
-
-        /* ვარსკვლავის მარკერის სტილი */
-        .custom-star {
-            background: #f3cc4d;
-            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-            box-shadow: 0 0 15px #f3cc4d;
-            width: 30px !important;
-            height: 30px !important;
-            border: none;
-        }
-
-        /* მილოცვის ფანჯარა (Pop-up) */
-        .leaflet-popup-content-wrapper {
-            background: #161b2e;
+        body {
+            margin: 0;
+            background-color: #05070a;
             color: #f3cc4d;
-            border: 1px solid #f3cc4d;
-            border-radius: 15px;
             font-family: 'Fira Go', sans-serif;
+            overflow: hidden;
         }
-        .leaflet-popup-tip { background: #161b2e; border: 1px solid #f3cc4d; }
 
-        .header-overlay {
+        /* რუკის ფონი - აქ შეგიძლია ნებისმიერი ქალაქის მუქი რუკის სურათი ჩასვა */
+        .map-bg {
+            position: fixed;
+            inset: 0;
+            background-image: url('https://w0.peakpx.com/wallpaper/380/100/HD-wallpaper-dark-map-city-maps.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: grayscale(100%) brightness(20%) contrast(120%);
+            z-index: -1;
+        }
+
+        .constellation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* წერტილი (ვარსკვლავი) */
+        .point {
             position: absolute;
-            top: 20px;
+            width: 12px;
+            height: 12px;
+            background: #f3cc4d;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #f3cc4d, 0 0 30px #f3cc4d;
+            cursor: pointer;
+            transition: transform 0.3s;
+            z-index: 10;
+        }
+
+        .point:hover {
+            transform: scale(2);
+        }
+
+        /* ხაზები წერტილებს შორის */
+        .line {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(243,204,77,0.1), rgba(243,204,77,0.5), rgba(243,204,77,0.1));
+            height: 1px;
+            transform-origin: left center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* ინფორმაციის ფანჯარა */
+        .info-card {
+            position: absolute;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
+            background: rgba(10, 14, 26, 0.8);
+            border: 1px solid #f3cc4d;
+            padding: 20px;
+            border-radius: 15px;
             text-align: center;
-            pointer-events: none;
+            backdrop-filter: blur(10px);
+            max-width: 90%;
+            width: 400px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .header {
+            position: absolute;
+            top: 40px;
             width: 100%;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <div class="header-overlay">
-        <h1 class="text-4xl md:text-5xl text-amber-400 drop-shadow-lg animate__animated animate__fadeInDown">Our Map of Stars</h1>
-        <p class="text-slate-300 tracking-widest uppercase text-xs mt-2 bg-black/40 inline-block px-4 py-1 rounded-full">მოგზაურობა ჩვენს მოგონებებში</p>
+    <div class="map-bg"></div>
+
+    <div class="header">
+        <h1 class="text-4xl md:text-5xl opacity-80">Our Universe in One City</h1>
+        <p class="text-sm tracking-[0.3em] uppercase mt-2 text-slate-500">თბილისი, 2026</p>
     </div>
 
-    <div id="map"></div>
+    <div class="constellation-container" id="container">
+        <div class="point" style="top: 35%; left: 30%;" onclick="showInfo('პირველი პაემანი', 'აქ პირველად შეგამჩნიე და მივხვდი, რომ სამყარო შეიცვალა.')"></div>
+        <div class="point" style="top: 45%; left: 55%;" onclick="showInfo('ჩვენი კაფე', 'საუკეთესო ყავა და ყველაზე გულწრფელი ღიმილი.')"></div>
+        <div class="point" style="top: 25%; left: 70%;" onclick="showInfo('ხედი მთაწმინდიდან', 'ქალაქი ჩვენს ფეხქვეშ იყო, ვარსკვლავები კი - ჩვენს თავზე.')"></div>
+        <div class="point" style="top: 65%; left: 45%;" onclick="showInfo('პირველი კოცნა', 'დრო გაჩერდა და მხოლოდ ჩვენი გულისცემა ისმოდა.')"></div>
+    </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <div id="infoCard" class="info-card">
+        <h2 id="infoTitle" class="text-xl font-bold mb-2 uppercase tracking-widest"></h2>
+        <p id="infoText" class="text-slate-300 italic"></p>
+        <button onclick="this.parentElement.style.display='none'" class="mt-4 text-xs text-amber-500 underline">დახურვა</button>
+    </div>
+
     <script>
-        // რუკის ინიციალიზაცია (კოორდინატები დაყენებულია თბილისზე, როგორც მაგალითი)
-        var map = L.map('map', {
-            zoomControl: false 
-        }).setView([41.7151, 44.8271], 14); 
+        function showInfo(title, text) {
+            const card = document.getElementById('infoCard');
+            document.getElementById('infoTitle').innerText = title;
+            document.getElementById('infoText').innerText = text;
+            card.style.display = 'block';
+            card.classList.add('animate__animated', 'animate__fadeInUp');
+        }
 
-        // რუკის ვიზუალური შრე (CartoDB Dark Matter)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        // მოგონებების მონაცემები
-        const points = [
-            {
-                lat: 41.7100, lng: 44.8200,
-                title: "პირველი შეხვედრა",
-                text: "აქ ყველაფერი დაიწყო... შენი ღიმილი და პირველი 'გამარჯობა'.",
-                icon: "✨"
-            },
-            {
-                lat: 41.7200, lng: 44.8350,
-                title: "ჩვენი საყვარელი კაფე",
-                text: "ყველაზე გემრიელი ყავა და დაუსრულებელი საუბრები ჯაზზე.",
-                icon: "☕"
-            },
-            {
-                lat: 41.7050, lng: 44.8000,
-                title: "ღამის გასეირნება",
-                text: "ამ ხედიდან ქალაქი ისეთივე ლამაზი ჩანდა, როგორც შენ.",
-                icon: "🌙"
+        // ხაზების ავტომატური გაყვანა წერტილებს შორის (კონსტელაციის ეფექტი)
+        function drawLines() {
+            const points = document.querySelectorAll('.point');
+            const container = document.getElementById('container');
+            
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i].getBoundingClientRect();
+                const p2 = points[i+1].getBoundingClientRect();
+                
+                const x1 = p1.left + p1.width/2;
+                const y1 = p1.top + p1.height/2;
+                const x2 = p2.left + p2.width/2;
+                const y2 = p2.top + p2.height/2;
+                
+                const length = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+                const angle = Math.atan2(y2-y1, x2-x1) * 180 / Math.PI;
+                
+                const line = document.createElement('div');
+                line.className = 'line';
+                line.style.width = length + 'px';
+                line.style.left = x1 + 'px';
+                line.style.top = y1 + 'px';
+                line.style.transform = `rotate(${angle}deg)`;
+                
+                container.appendChild(line);
             }
-        ];
+        }
 
-        // მარკერების დამატება
-        points.forEach(point => {
-            var starIcon = L.divIcon({
-                className: 'custom-star animate__animated animate__pulse animate__infinite',
-                iconSize: [30, 30]
-            });
-
-            L.marker([point.lat, point.lng], {icon: starIcon})
-                .addTo(map)
-                .bindPopup(`
-                    <div style="text-align:center; padding:10px;">
-                        <span style="font-size:24px;">${point.icon}</span>
-                        <h3 style="margin:10px 0; font-weight:bold; font-size:18px;">${point.title}</h3>
-                        <p style="font-size:14px; color:#cbd5e1; font-style:italic;">${point.text}</p>
-                    </div>
-                `);
-        });
-
-        // რუკის ცენტრის ავტომატური გასწორება მობილურზე
-        map.on('click', function() {
-            // ინტერაქციისთვის
-        });
+        window.onload = drawLines;
+        window.onresize = () => {
+            document.querySelectorAll('.line').forEach(l => l.remove());
+            drawLines();
+        };
     </script>
 </body>
 </html>
